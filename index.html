@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./css/style.css">    
+</head>
+<body> 
+    <div class="input" >
+        <input type="file" id="size" onchange="handleFileInputChange(event)">
+        <label>
+            <input type="radio" name="viewEdit" value="view" onclick="toggleTextarea(false)" checked>
+            View Only
+        </label>
+        <label>
+            <input type="radio" name="viewEdit" value="edit" onclick="toggleTextarea(true)">
+            Editable
+        </label>
+        <input type="button" value="Save Zip Value" onclick="changeZipContent()" style="margin: 10px;">
+    </div>
+    
+    <div class="display" > 
+        <div class="zipContent" id="zipContent" >
+        
+        </div>
+        <div class="value" id="value">
+            <textarea name="" id="123" cols="30" rows="10"></textarea>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js" defer></script>
+    <script src="./js/readzip.js" defer > </script>
+</body>
+</html>

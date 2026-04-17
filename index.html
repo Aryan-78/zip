@@ -3,33 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="./css/style.css">    
+    <title>Zip Editor • ZIP Editor</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 </head>
-<body> 
-    <div class="input" >
-        <input type="file" id="size" onchange="handleFileInputChange(event)">
-        <label>
-            <input type="radio" name="viewEdit" value="view" onclick="toggleTextarea(false)" checked>
-            View Only
-        </label>
-        <label>
-            <input type="radio" name="viewEdit" value="edit" onclick="toggleTextarea(true)">
-            Editable
-        </label>
-        <input type="button" value="Save Zip Value" onclick="changeZipContent()" style="margin: 10px;">
-    </div>
-    
-    <div class="display" > 
-        <div class="zipContent" id="zipContent" >
-        
+<body>
+    <header>
+        <h1><i class="fas fa-file-zip"></i> Zip Editor</h1>
+        <p>View & Edit ZIP Files Instantly</p>
+    </header>
+
+    <div class="controls">
+        <div class="file-input">
+            <label for="size" class="upload-btn">
+                <i class="fas fa-cloud-upload-alt"></i>
+                Choose ZIP File
+                <input type="file" id="size" accept=".zip" onchange="handleFileInputChange(event)">
+            </label>
         </div>
-        <div class="value" id="value">
-            <textarea name="" id="123" cols="30" rows="10"></textarea>
+
+        <div class="mode-toggle">
+            <label class="toggle-label">
+                <input type="radio" name="viewEdit" value="view" onclick="toggleMode(false)" checked>
+                <span>View Only</span>
+            </label>
+            <label class="toggle-label">
+                <input type="radio" name="viewEdit" value="edit" onclick="toggleMode(true)">
+                <span>Editable</span>
+            </label>
+        </div>
+
+        <button onclick="changeZipContent()" class="save-btn">
+            <i class="fas fa-save"></i> Save Changes
+        </button>
+    </div>
+
+    <div class="main">
+        <div class="zip-panel">
+            <h2><i class="fas fa-folder-open"></i> Files in Archive</h2>
+            <div class="zipContent" id="zipContent"></div>
+        </div>
+
+        <div class="editor-panel">
+            <h2><i class="fas fa-code"></i> File Content</h2>
+            <div class="value" id="value"></div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js" defer></script>
-    <script src="./js/readzip.js" defer > </script>
+    <script src="./js/readzip.js" defer></script>
 </body>
 </html>

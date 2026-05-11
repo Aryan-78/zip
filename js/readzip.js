@@ -2,24 +2,114 @@ let zipName = "";
 let zipFileName = "";
 let isEditable = false;        // Global mode tracker
 let currentFileType = "";      // "text" or "image"
+let selectedRow = null;        // Currently selected file row in the tree
+
+const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'];
+
+function isImageFile(name) {
+    const ext = name.split('.').pop().toLowerCase();
+    return IMAGE_EXTS.includes(ext);
+}
+
+function buildTree(zip) {
+    const root = { name: '', type: 'folder', fullPath: '', children: {} };
+
+    zip.forEach(function (relativePath, zipEntry) {
+        const parts = relativePath.split('/').filter(Boolean);
+        let node = root;
+
+        parts.forEach((part, idx) => {
+            const isLast = idx === parts.length - 1;
+            const isFile = isLast && !zipEntry.dir;
+
+            if (!node.children[part]) {
+                node.children[part] = {
+                    name: part,
+                    type: isFile ? 'file' : 'folder',
+                    fullPath: isFile ? relativePath : parts.slice(0, idx + 1).join('/') + '/',
+                    children: {}
+                };
+            }
+            node = node.children[part];
+        });
+    });
+
+    return root;
+}
+
+function sortedChildren(node) {
+    return Object.values(node.children).sort((a, b) => {
+        if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+        return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    });
+}
+
+function renderTree(node, parentEl, depth) {
+    sortedChildren(node).forEach(child => {
+        if (child.type === 'folder') {
+            const row = document.createElement('div');
+            row.className = 'tree-item tree-folder';
+            row.style.paddingLeft = `${depth * 16 + 8}px`;
+            row.innerHTML = `
+                <i class="fas fa-chevron-right tree-chevron"></i>
+                <i class="fas fa-folder tree-icon folder-icon"></i>
+                <span class="tree-name"></span>
+            `;
+            row.querySelector('.tree-name').textContent = child.name;
+
+            const childWrap = document.createElement('div');
+            childWrap.className = 'tree-children collapsed';
+            renderTree(child, childWrap, depth + 1);
+
+            row.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const collapsed = childWrap.classList.toggle('collapsed');
+                row.querySelector('.tree-chevron').classList.toggle('rotated', !collapsed);
+                const folderIcon = row.querySelector('.folder-icon');
+                folderIcon.classList.toggle('fa-folder', collapsed);
+                folderIcon.classList.toggle('fa-folder-open', !collapsed);
+            });
+
+            parentEl.appendChild(row);
+            parentEl.appendChild(childWrap);
+        } else {
+            const row = document.createElement('div');
+            row.className = 'tree-item tree-file';
+            row.style.paddingLeft = `${depth * 16 + 8}px`;
+            const icon = isImageFile(child.name) ? 'fa-image' : 'fa-file-lines';
+            row.innerHTML = `
+                <span class="tree-chevron-spacer"></span>
+                <i class="fas ${icon} tree-icon file-icon"></i>
+                <span class="tree-name"></span>
+            `;
+            row.querySelector('.tree-name').textContent = child.name;
+            row.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (selectedRow) selectedRow.classList.remove('selected');
+                row.classList.add('selected');
+                selectedRow = row;
+                fileContent(child.fullPath);
+            });
+            parentEl.appendChild(row);
+        }
+    });
+}
 
 function readZipFile(file) {
     zipName = file;
+    zipFileName = "";
+    currentFileType = "";
+    selectedRow = null;
+    document.getElementById('value').innerHTML = '';
+
     const zip = new JSZip();
 
     zip.loadAsync(file).then(function (zip) {
         const workspace = document.getElementById('zipContent');
         workspace.innerHTML = '';
 
-        zip.forEach(function (relativePath, zipEntry) {
-            if (zipEntry.dir) return;
-
-            const fileNameOnly = zipEntry.name.split('/').pop();
-            const btn = document.createElement('button');
-            btn.innerHTML = `📄 ${fileNameOnly}`;
-            btn.onclick = () => fileContent(zipEntry.name);
-            workspace.appendChild(btn);
-        });
+        const tree = buildTree(zip);
+        renderTree(tree, workspace, 0);
     });
 }
 
@@ -33,7 +123,7 @@ function readZipFileContent(zipFile, fileName) {
     container.innerHTML = '';
 
     const ext = fileName.split('.').pop().toLowerCase();
-    const isImage = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
+    const isImage = isImageFile(fileName);
 
     const zip = new JSZip();
     zip.loadAsync(zipFile).then(function (zipData) {
@@ -54,7 +144,7 @@ function readZipFileContent(zipFile, fileName) {
                 img.style.boxShadow = "0 10px 30px rgba(0,0,0,0.5)";
                 container.appendChild(img);
             });
-        } 
+        }
         else {
             currentFileType = "text";
             file.async("string").then(content => {
